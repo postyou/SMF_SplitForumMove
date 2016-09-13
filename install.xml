@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!DOCTYPE modification SYSTEM "http://www.simplemachines.org/xml/modification">
+<modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
+	<id>postyou:SplitForumMove</id>
+	<version>1.0.2</version>
+
+	<file name="$sourcedir/MoveTopic.php">
+        <operation>
+            <search position="before"><![CDATA[global $txt, $board, $topic, $user_info, $context, $language, $scripturl, $settings, $smcFunc, $modSettings, $forumid]]></search>
+            <add><![CDATA[, $subforum_tree]]></add>
+        </operation>
+        <operation>
+            <search position="replace"><![CDATA[SELECT b.id_board, b.name, b.child_level, c.name AS cat_name, c.id_cat]]></search>
+            <add><![CDATA[SELECT b.id_board, b.name, b.child_level, c.name AS cat_name, c.id_cat, c.forumid]]></add>
+        </operation>
+        <operation>
+        <search position="replace"><![CDATA[LEFT JOIN {db_prefix}categories AS c ON (c.id_cat = b.id_cat AND c.forumid = {int:forumid})]]></search>
+        <add><![CDATA[LEFT JOIN {db_prefix}categories AS c ON (c.id_cat = b.id_cat)]]></add>
+        </operation>
+    <operation>
+        <search position="replace" whitespace="loose"><![CDATA['blank_redirect' => '',
+										'current_board' => $board]]></search>
+        <add><![CDATA['blank_redirect' => '',
+										'current_board' => $board,
+										'forumid' => (int) $forumid]]></add>
+    </operation>
+    <operation>
+        <search position="replace" whitespace="loose"><![CDATA[AND b.redirect = {string:blank_redirect}
+            AND c.forumid = {int:forumid}
+			AND b.id_board != {int:current_board}]]></search>
+        <add><![CDATA[AND b.redirect = {string:blank_redirect}
+			AND b.id_board != {int:current_board}]]></add>
+    </operation>
+    <operation>
+			<search position="replace">
+				<![CDATA['name' => strip_tags($row['cat_name']),]]>
+			</search>
+			<add>
+				<![CDATA['name' => strip_tags($subforum_tree[$row["forumid"]]['boardname']." >> ".$row['cat_name']),]]>
+			</add>
+	</operation>
+    </file>
+</modification>
